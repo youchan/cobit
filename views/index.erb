@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>cobit</title>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="<%= cometio_js %>"></script>
+</head>
+<body>
+<div id="markdown">
+<%= @markdown %>
+</div>
+</body>
+<script>
+function doPoll() {
+  $("#markdown").load("./markdown");
+}
+
+$(function () {
+  var io = new CometIO().connect();
+  io.on("markdown", function(data) {
+    $("#markdown").empty().append(data.content);
+  });
+});
+</script>
+</html>
