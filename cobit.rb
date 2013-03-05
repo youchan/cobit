@@ -4,36 +4,57 @@ require "sinatra/cometio"
 require "fssm"
 require "redcarpet"
 
-path = ARGV[0]
+class Cobit
+  attr_accessor :path
 
-renderer = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
+  def initialize
+    @path = "data/README.md"
+    @renderer = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
 
-Thread.new do
-  FSSM.monitor(File.dirname(path), File.basename(path)) do
-    update do|base, file|
-      open(path) do |f|
-        md = renderer.render(f.read)
-        puts "push: #{md}"
-        CometIO.push :markdown, { :content => md }
+    Thread.new do
+      FSSM.monitor("data", "*") do
+        update do|base, file|
+          puts "UPDATE: #{base} #{file}"
+          push
+          if File.basename(@path) == file then
+          end
+        end
+        create do|base, file|
+          @path = file
+          push
+        end
+        delete do|base, file|
+          puts "DELETE: #{base} #{file}"
+        end
       end
     end
-    create do|base, file|
-      puts "CREATE: #{base} #{file}"
-    end
-    delete do|base, file|
-      puts "DELETE: #{base} #{file}"
-    end
+  end
+
+  def connect(session)
+    @session = session
+  end
+  
+  def push
+    #files = Dir::entries("data")
+    #CometIO.push :chat, { :content => render, :files => files }, { :to => @session }
+    CometIO.push :cobit, { :content => render }
+  end
+
+  def render
+    @renderer.render(File.read(@path))
   end
 end
+
+cobit = Cobit.new
 
 CometIO.on :connect do |session|
   puts "new client <#{session}>"
+  cobit.connect session
 end
 
 get "/" do
-  open(path) do |f|
-    @markdown = renderer.render(f.read)
-  end
+  @markdown = cobit.render
   erb :index
 end 
+
 
