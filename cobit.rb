@@ -4,24 +4,47 @@ require "sinatra/cometio"
 require "fssm"
 require "redcarpet"
 
+#set :cometio, :timeout => 60
+
 class Cobit
-  attr_accessor :path
 
-  def initialize
-    @path = "data/README.md"
-    @renderer = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
+  class Renderer
+    attr_accessor :path
+ 
+    def initialize
+      @path = "data/README.md"
+      @redcarpet = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
+    end
+ 
+    def connect(session)
+      @@instance.session = session
+    end
+    
+    def render(path)
+      @path = path
+      render
+    end
 
-    Thread.new do
+    def render
+      content = @redcarpet.render(File.read(@path))
+      #puts content
+      #CometIO.push :cobit, { :content => content }
+    end
+  end
+
+  @@renderer = Renderer.new
+  @@session = ""
+
+  def self.start
+    EM.defer do
       FSSM.monitor("data", "*") do
         update do|base, file|
           puts "UPDATE: #{base} #{file}"
-          push
-          if File.basename(@path) == file then
-          end
+          #@@renderer.render
+          CometIO.push :cobit, { :content => @@renderer.render }
         end
         create do|base, file|
-          @path = file
-          push
+          CometIO.push :cobit, { :content => @@renderer.render(file) }
         end
         delete do|base, file|
           puts "DELETE: #{base} #{file}"
@@ -30,31 +53,23 @@ class Cobit
     end
   end
 
-  def connect(session)
-    @session = session
-  end
-  
-  def push
-    #files = Dir::entries("data")
-    #CometIO.push :chat, { :content => render, :files => files }, { :to => @session }
-    CometIO.push :cobit, { :content => render }
+  def self.connect(session)
+    @@session = session
   end
 
-  def render
-    @renderer.render(File.read(@path))
+  def self.get_session
+    @@session
+  end
+
+  def self.render
+            @@renderer.render
   end
 end
 
-cobit = Cobit.new
-
-CometIO.on :connect do |session|
-  puts "new client <#{session}>"
-  cobit.connect session
-end
+Cobit.start
 
 get "/" do
-  @markdown = cobit.render
+  @markdown = Cobit.render
+  @filelist = Dir.entries("data").select {|f| File.extname(f) == ".md"}
   erb :index
 end 
-
-

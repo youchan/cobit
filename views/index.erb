@@ -14,14 +14,17 @@
 $(function () {
   var io = new CometIO().connect();
   io.on("cobit", function(data) {
-    alert(data.content);
     $("#markdown").empty().append(data.content);
-    //$("#filelist").empty();
-    //for (var filename : data.files) {
-      //alert("filename");
-      //$("#filelist").append(filename);
-    //}
   });
+/*
+  io.on("filelist", function(data) {
+    $("#filelist").empty();
+    for (var filename : data.files) {
+      //alert("filename");
+      $("#filelist").append(filename);
+    }
+  });
+*/
 });
 </script>
 
@@ -30,11 +33,11 @@ $(function () {
 <div class="container">
 <div class="row">
 <div class="span3 bs-docs-sidebar">
-<a class="btn" href="new"><i class="icon-file"></i>
-<ul class="nav nav-list bs-docs-sidenav">
-<li><a href="#"><i class="icon-chevron-right"></i>テスト1</a></li>
-<li><a href="#"><i class="icon-chevron-right"></i>テスト2</a></li>
-<li><a href="#"><i class="icon-chevron-right"></i>テスト3</a></li>
+<a class="btn" href="new"><i class="icon-file"></i></a>
+<ul class="nav nav-list bs-docs-sidenav filelist">
+<% @filelist.each do |fn| %>
+<li><a href="#"><i class="icon-chevron-right"></i><%= fn %></a></li>
+<% end %>
 </ul>
 <div class="filelist">
 

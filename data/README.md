@@ -15,26 +15,17 @@ CSSも設定していないので、ちゃんとQiitaと同じ表示になりま
 とりあえず、コミットしましたって感じです。すいません…
 
 ## インストール
-a
-alks
-sinatra
-> gem install sinatra
 
-sinatra CometIO
-> gem install sinatra-cometio
-
-redcarpet
-> gem install redcarpet
-
-fssm
-> gem install fssm
+> bundle install
 
 ## 使い方
 
-> ruby cobit.rb _&lt;filename&gt;_
+> ruby cobit.rb
 
 で起動して、ブラウザで
 [http://localhost:4567/](http://localhost:4567/)
 にアクセスしてください。
 
 あとはお好きなエディタでファイルを編集し保存するとブラウザ上の表示が更新されます。
+
+
