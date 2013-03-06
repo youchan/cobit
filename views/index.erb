@@ -16,15 +16,25 @@ $(function () {
   io.on("cobit", function(data) {
     $("#markdown").empty().append(data.content);
   });
-/*
+
   io.on("filelist", function(data) {
-    $("#filelist").empty();
-    for (var filename : data.files) {
-      //alert("filename");
-      $("#filelist").append(filename);
+    if (data.type == "add") {
+        id = "open_" + data.filename.replace(/.md$/, "");
+        $("ul#filelist").append("<li><a href=\"#\" id = \"" + id + "\">" + data.filename + "<i class=\"icon-chevron-right\"></i></a></li>");
+        $("#" + id).click(function() {
+          $.ajax({url:"/open/" + data.filename, type:"GET"});
+        });
+    } else if (data.type == "remove") {
+        $("#open_" + data.filename.replace(/.md$/, "")).remove();
     }
   });
-*/
+
+<% @filelist.each do |fn| %>
+  $("#open_<%= fn.gsub(/.md$/, "") %>").click(function() {
+    $.ajax({url:"/open/<%= fn %>", type:"GET"});
+  });
+
+<% end %>
 });
 </script>
 
@@ -34,14 +44,11 @@ $(function () {
 <div class="row">
 <div class="span3 bs-docs-sidebar">
 <a class="btn" href="new"><i class="icon-file"></i></a>
-<ul class="nav nav-list bs-docs-sidenav filelist">
+<ul class="nav nav-list bs-docs-sidenav" id="filelist">
 <% @filelist.each do |fn| %>
-<li><a href="#"><i class="icon-chevron-right"></i><%= fn %></a></li>
+<li><a href="#" id="open_<%= fn.gsub(/.md$/, "") %>"><i class="icon-chevron-right"></i><%= fn %></a></li>
 <% end %>
 </ul>
-<div class="filelist">
-
-</div>
 </div>
 <div class="span9">
 <div id="markdown">
