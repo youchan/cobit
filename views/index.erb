@@ -12,29 +12,45 @@
 
 <script>
 $(function () {
+  var title_ = "";
   var io = new CometIO().connect();
   io.on("cobit", function(data) {
     $("#markdown").empty().append(data.content);
+    title_ = data.title;
   });
 
   io.on("filelist", function(data) {
     if (data.type == "add") {
-        id = "open_" + data.filename.replace(/.md$/, "");
-        $("ul#filelist").append("<li><a href=\"#\" id = \"" + id + "\">" + data.filename + "<i class=\"icon-chevron-right\"></i></a></li>");
+        title =  data.filename.replace(/.md$/, "");
+        id = "open_" + title;
+        $("ul#filelist").append("<li><a href=\"#\" id = \"" + id + "\">" + title + "<i class=\"icon-chevron-right\"></i></a></li>");
         $("#" + id).click(function() {
-          $.ajax({url:"/open/" + data.filename, type:"GET"});
+          $.ajax({url:"/open/" + title, type:"GET"});
         });
     } else if (data.type == "remove") {
-        $("#open_" + data.filename.replace(/.md$/, "")).remove();
+        $("#open_" + title).remove();
     }
   });
 
 <% @filelist.each do |fn| %>
   $("#open_<%= fn.gsub(/.md$/, "") %>").click(function() {
-    $.ajax({url:"/open/<%= fn %>", type:"GET"});
+    $.ajax({url:"/open/<%= fn.gsub(/.md$/, "") %>", type:"GET"});
   });
 
 <% end %>
+
+  $("#login").click(function () {
+    alert("ログイン機能はまだ実装されていません。\n.tokenファイルを作ってトークンを渡してね！");
+  });
+
+  $("#new_file").click(function () {
+    alert("ファイルの新規作成機能はまだ実装されていません。\ndataディレクトリの中にファイルを作成してね！");
+  });
+
+  $("#post_to_qiita").click(function () {
+    alert("qiitaに投稿します。\nタイトル: " + title_);
+    //$.ajax({url:"/upload/" + title, type:"GET"});
+  });
 });
 </script>
 
@@ -43,7 +59,8 @@ $(function () {
 <div class="container">
 <div class="row">
 <div class="span3 bs-docs-sidebar">
-<a class="btn" href="new"><i class="icon-file"></i></a>
+<a class="btn" id="login"><i class="icon-user"></i></a>
+<a class="btn" id="new_file"><i class="icon-file"></i></a>
 <ul class="nav nav-list bs-docs-sidenav" id="filelist">
 <% @filelist.each do |fn| %>
 <li><a href="#" id="open_<%= fn.gsub(/.md$/, "") %>"><i class="icon-chevron-right"></i><%= fn %></a></li>
@@ -54,6 +71,7 @@ $(function () {
 <div id="markdown">
 <%= @markdown %>
 </div>
+<a class="btn" id="post_to_qiita">Qiitaに投稿する</a>
 </div>
 </div>
 </div>

@@ -3,6 +3,7 @@ require "sinatra"
 require "sinatra/cometio"
 require "fssm"
 require "redcarpet"
+require "qiita"
 
 #set :cometio, :timeout => 60
 
@@ -12,7 +13,7 @@ class Cobit
     attr_accessor :path
  
     def initialize
-      @path = "data/README.md"
+      @title = "README"
       @redcarpet = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
     end
  
@@ -20,23 +21,35 @@ class Cobit
       @@instance.session = session
     end
     
-    def open(path)
-      @path = path
-      CometIO.push :cobit, { :content => render }
+    def open(title)
+      @title = title
+      CometIO.push :cobit, { :content => render, :title => @title }
+    end
+
+    def path
+      "data/#{@title}.md"
+    end
+
+    def content
+      if File.exist? path
+        File.read(path)
+      else
+        ""
+      end
     end
 
     def render
-      @path = "data/README.md" if not File.exist? @path
-      content = @redcarpet.render(File.read(@path))
-      #puts content
-      #CometIO.push :cobit, { :content => content }
+      @redcarpet.render(content)
     end
   end
 
   @@renderer = Renderer.new
   @@session = ""
+  @@qiita = nil
 
   def self.start
+    token = File.read(".token") if File.exist? ".token"
+    @@qiita = Qiita.new token: token
     EM.defer do
       FSSM.monitor("data", "*") do
         update do|base, file|
@@ -66,12 +79,21 @@ class Cobit
     @@session
   end
 
+  def self.content
+    @@renderer.content
+  end
+
   def self.render
     @@renderer.render
   end
 
-  def self.open(path)
-    @@renderer.open path
+  def self.open(title)
+    @@renderer.open title
+  end
+
+  def self.upload(title)
+    puts "upload: #{title}"
+    @@qiita.post_item title: title, body: Cobit.content, tags: [], private: false
   end
 end
 
@@ -83,7 +105,12 @@ get "/" do
   erb :index
 end 
 
-get "/open/:name" do
-  Cobit.open "data/" + params[:name]
+get "/open/:title" do
+  Cobit.open params[:title]
+end
+
+get "/upload/:title" do
+  Cobit.upload params[:title]
+  ""
 end
 

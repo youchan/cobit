@@ -4,3 +4,8 @@ source 'http://rubygems.org'
 gemspec
 gem 'minitest'
 gem 'thin'
+
+gem 'sinatra'
+gem 'redcarpet'
+gem 'faraday'
+gem 'qiita'
